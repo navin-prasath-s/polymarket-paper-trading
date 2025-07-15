@@ -1,0 +1,50 @@
+{
+  "enable_order_book": false,
+  "active": true,
+  "closed": true,
+  "archived": false,
+  "accepting_orders": false,
+  "accepting_order_timestamp": null,
+  "minimum_order_size": 15,
+  "minimum_tick_size": 0.01,
+  "condition_id": "0x9deb0baac40648821f96f01339229a422e2f5c877de55dc4dbf981f95a1e709c",
+  "question_id": "0x956f72c01c11615250489a2fcd22dbebdc1d0da86c3f090c28a368dfee714d07",
+  "question": "NFL Saturday: Chiefs vs. Raiders",
+  "description": "In the upcoming NFL game scheduled for January 7, 2023:\n\nIf the Kansas City Chiefs win, this market will resolve to \"Chiefs\".\n\nIf the Las Vegas Raiders win, this market will resolve to \"Raiders\".\n\nIf this game ends in a tie, this market will resolve 50-50. If this game is not completed by January 15, 2023, 11:59:59 PM ET, this market will resolve 50-50.",
+  "market_slug": "nfl-saturday-chiefs-vs-raiders",
+  "end_date_iso": "2023-01-07T00:00:00Z",
+  "game_start_time": "2023-01-07T21:30:00Z",
+  "seconds_delay": 3,
+  "fpmm": "0xb6577bdC2D74A7A50FA43fB91d7283E05cd625a4",
+  "maker_base_fee": 0,
+  "taker_base_fee": 0,
+  "notifications_enabled": true,
+  "neg_risk": false,
+  "neg_risk_market_id": "",
+  "neg_risk_request_id": "",
+  "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/nfl.png",
+  "image": "https://polymarket-upload.s3.us-east-2.amazonaws.com/nfl.png",
+  "rewards": {
+    "rates": null,
+    "min_size": 0,
+    "max_spread": 0
+  },
+  "is_50_50_outcome": false,
+  "tokens": [
+    {
+      "token_id": "14270523446080509320829200481895961480205553513304203367521919818541658424782",
+      "outcome": "Chiefs",
+      "price": 1,
+      "winner": false
+    },
+    {
+      "token_id": "93110170397161149119544349457822484949376809039410140245101963942162463626903",
+      "outcome": "Raiders",
+      "price": 0,
+      "winner": false
+    }
+  ],
+  "tags": [
+    "All"
+  ]
+}
