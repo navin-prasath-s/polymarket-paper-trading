@@ -2,10 +2,17 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+
+class Token(BaseModel):
+    token_id: str
+    outcome: str
+    price: float
+    winner: bool
+
 class MinimalClobModel(BaseModel):
     condition_id: str
     market_slug: str
-    end_date_iso: str | None
+    question: str
     enable_order_book: bool
     active: bool
     closed: bool
@@ -13,8 +20,7 @@ class MinimalClobModel(BaseModel):
     accepting_orders: bool
     tokens: list[Token]
 
-class Token(BaseModel):
-    token_id: str
-    outcome: str
-    price: float
-    winner: bool
+    model_config = {
+        "extra": "ignore"
+    }
+
