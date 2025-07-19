@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timezone
 import json
 
-from sqlmodel import Session,select
+from sqlmodel import select
 from py_clob_client.client import ClobClient
 
 from app.schemas.tracked_market import TrackedMarketSchema
