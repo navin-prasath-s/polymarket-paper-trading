@@ -88,9 +88,6 @@ def handle_removed_markets(db, db_markets, removed_ids):
             print(f"POST /market/remove failed: {e}")
 
 
-
-
-
 def run_diff_check():
     with get_session() as db:
         db_result = db.execute(select(TrackedMarket))
