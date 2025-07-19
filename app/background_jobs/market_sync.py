@@ -11,7 +11,7 @@ from app.databases.session import get_session
 
 load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")
-POST_URL_BASE = "http://localhost:8000"
+POST_URL_BASE = "http://127.0.0.1:8000"
 HEADERS = {"x-api-key": API_KEY}
 
 
@@ -58,7 +58,8 @@ def handle_new_markets(db, clob_markets, newly_added_ids):
         try:
             response = httpx.post(f"{POST_URL_BASE}/market/add",
                                   json=[m.model_dump() for m in to_post],
-                                  headers=HEADERS)
+                                  headers=HEADERS,
+                                  timeout=90)
             response.raise_for_status()
         except Exception as e:
             print(f"POST /market/add failed: {e}")
@@ -73,10 +74,10 @@ def handle_removed_markets(db, db_markets, removed_ids):
                 to_post.append(TrackedMarketSchema.model_validate(m))
                 db.delete(m)
                 db.commit()
-                print(f"🗑Removed: {m.condition_id}")
+                print(f"Removed: {m.condition_id}")
             except Exception as e:
                 db.rollback()
-                print(f"elete failed for {m.condition_id}: {e}")
+                print(f"Delete failed for {m.condition_id}: {e}")
 
     if to_post:
         try:
