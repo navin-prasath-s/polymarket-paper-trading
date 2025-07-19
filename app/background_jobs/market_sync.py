@@ -1,4 +1,5 @@
 import os
+import httpx
 
 from dotenv import load_dotenv
 from sqlmodel import select
@@ -37,6 +38,57 @@ def get_markets():
 
     return filtered
 
+def handle_new_markets(db, clob_markets, newly_added_ids):
+    to_post = []
+    for market in clob_markets:
+        if market["condition_id"] in newly_added_ids:
+            try:
+                schema_obj = TrackedMarketSchema(**market)
+                model_obj = TrackedMarket(**schema_obj.model_dump())
+                db.add(model_obj)
+                db.commit()
+                db.refresh(model_obj)
+                to_post.append(schema_obj)
+                print(f"Added: {schema_obj.condition_id}")
+            except Exception as e:
+                db.rollback()
+                print(f"Insert failed for {market['condition_id']}: {e}")
+
+    if to_post:
+        try:
+            response = httpx.post(f"{POST_URL_BASE}/market/add",
+                                  json=[m.model_dump() for m in to_post],
+                                  headers=HEADERS)
+            response.raise_for_status()
+        except Exception as e:
+            print(f"POST /market/add failed: {e}")
+
+
+
+def handle_removed_markets(db, db_markets, removed_ids):
+    to_post = []
+    for m in db_markets:
+        if m.condition_id in removed_ids:
+            try:
+                to_post.append(TrackedMarketSchema.model_validate(m))
+                db.delete(m)
+                db.commit()
+                print(f"🗑Removed: {m.condition_id}")
+            except Exception as e:
+                db.rollback()
+                print(f"elete failed for {m.condition_id}: {e}")
+
+    if to_post:
+        try:
+            response = httpx.post(f"{POST_URL_BASE}/market/remove",
+                                  json=[m.model_dump() for m in to_post],
+                                  headers=HEADERS)
+            response.raise_for_status()
+        except Exception as e:
+            print(f"POST /market/remove failed: {e}")
+
+
+
 
 
 def run_diff_check():
@@ -52,28 +104,8 @@ def run_diff_check():
         newly_added = clob_condition_ids - db_condition_ids
         removed = db_condition_ids - clob_condition_ids
 
-
-
-        for market in clob_markets:
-            if market["condition_id"] in newly_added:
-                try:
-                    schema_obj = TrackedMarketSchema(**market)
-                    model_obj = TrackedMarket(**schema_obj.model_dump())
-                    db.add(model_obj)
-                    db.commit()
-                    db.refresh(model_obj)
-
-                except Exception as e:
-                    print(f"Failed to insert or POST for {market['condition_id']}: {e}")
-
-
-        for m in db_markets:
-            if m.condition_id in removed:
-                try:
-                    db.delete(m)
-                    db.commit()
-                except Exception as e:
-                    print(f"Failed to delete stale market: {e}")
+        handle_new_markets(db, clob_markets, newly_added)
+        handle_removed_markets(db, db_markets, removed)
 
 
 
