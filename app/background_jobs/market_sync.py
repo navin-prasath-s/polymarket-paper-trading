@@ -7,6 +7,7 @@ from py_clob_client.client import ClobClient
 
 from app.schemas.tracked_market import TrackedMarketSchema
 from app.models.tracked_market import TrackedMarket
+from app.models.market_change_log import MarketChangeLog, MarketChangeType
 from app.databases.session import get_session
 
 load_dotenv()
@@ -46,6 +47,13 @@ def handle_new_markets(db, clob_markets, newly_added_ids):
                 schema_obj = TrackedMarketSchema(**market)
                 model_obj = TrackedMarket(**schema_obj.model_dump())
                 db.add(model_obj)
+
+                log = MarketChangeLog(
+                    condition_id=model_obj.condition_id,
+                    change_type=MarketChangeType.ADDED
+                )
+                db.add(log)
+
                 db.commit()
                 db.refresh(model_obj)
                 to_post.append(schema_obj)
@@ -73,6 +81,12 @@ def handle_removed_markets(db, db_markets, removed_ids):
             try:
                 to_post.append(TrackedMarketSchema.model_validate(m))
                 db.delete(m)
+
+                log = MarketChangeLog(
+                    condition_id=m.condition_id,
+                    change_type=MarketChangeType.DELETED
+                )
+                db.add(log)
                 db.commit()
                 print(f"Removed: {m.condition_id}")
             except Exception as e:
