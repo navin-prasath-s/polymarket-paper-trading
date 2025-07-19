@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import APIRouter, Header, HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select
+from sqlmodel import select
 
 from app.schemas.tracked_market import TrackedMarketSchema
 from app.models.market import Market
@@ -15,7 +15,8 @@ router = APIRouter()
 API_KEY = os.getenv("INTERNAL_API_KEY")
 
 
-@router.post("/market/add", status_code=status.HTTP_201_CREATED)
+@router.post("/market/add",
+             status_code=status.HTTP_201_CREATED)
 async def add_tracked_market(
     markets: list[TrackedMarketSchema],
     x_api_key: str = Header(...)
@@ -43,7 +44,8 @@ async def add_tracked_market(
     return {"message": f"{created} market(s) added"}
 
 
-@router.post("/market/remove", status_code=status.HTTP_200_OK)
+@router.post("/market/remove",
+             status_code=status.HTTP_200_OK)
 async def remove_tracked_market(
     markets: list[TrackedMarketSchema],
     x_api_key: str = Header(...)
