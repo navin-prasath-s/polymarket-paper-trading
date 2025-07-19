@@ -16,7 +16,8 @@ def create_dummy_data():
             accepting_orders=True,
             active=True,
             closed=False,
-            archived=False
+            archived=False,
+            slug="example-market-1"
         ),
         TrackedMarketSchema(
             condition_id="cond_002",
@@ -24,7 +25,8 @@ def create_dummy_data():
             accepting_orders=True,
             active=False,
             closed=True,
-            archived=False
+            archived=False,
+            slug="example-market-2"
         ),
         TrackedMarketSchema(
             condition_id="cond_003",
@@ -32,7 +34,8 @@ def create_dummy_data():
             accepting_orders=False,
             active=False,
             closed=True,
-            archived=True
+            archived=True,
+            slug="example-market-3"
         ),
     ]
 
