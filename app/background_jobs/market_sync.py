@@ -1,7 +1,7 @@
 import time
 from datetime import datetime, timezone
 import json
-
+import sys
 from sqlmodel import select
 from py_clob_client.client import ClobClient
 
@@ -49,8 +49,6 @@ def run_diff_check():
         newly_added = clob_condition_ids - db_condition_ids
         removed = db_condition_ids - clob_condition_ids
 
-        print(f"New markets: {newly_added}")
-        print(f"Removed markets: {removed}")
 
 
         for market in clob_markets:
@@ -62,18 +60,15 @@ def run_diff_check():
                     db.commit()
                     db.refresh(model_obj)
 
-                    print(f"Inserted new market: {model_obj.condition_id}")
-
                 except Exception as e:
                     print(f"Failed to insert or POST for {market['condition_id']}: {e}")
 
+
         for m in db_markets:
             if m.condition_id in removed:
-                print(f"Market missing from CLOB now: {m.condition_id}")
                 try:
                     db.delete(m)
                     db.commit()
-                    print(f"🗑Removed stale market from DB: {m.condition_id}")
                 except Exception as e:
                     print(f"Failed to delete stale market: {e}")
 
