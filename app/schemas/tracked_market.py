@@ -7,6 +7,7 @@ class TrackedMarketSchema(BaseModel):
     active: bool
     closed: bool
     archived: bool
+    slug: str
 
     class Config:
         from_attributes = True

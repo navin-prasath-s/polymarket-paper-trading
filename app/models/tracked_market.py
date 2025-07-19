@@ -9,3 +9,4 @@ class TrackedMarket(SQLModel, table=True):
     active: bool
     closed: bool
     archived: bool
+    slug: str
