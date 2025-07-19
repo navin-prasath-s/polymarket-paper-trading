@@ -9,6 +9,7 @@ from sqlmodel import SQLModel
 
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog
+from app.models.market import Market
 
 
 

@@ -1,7 +1,6 @@
-import time
-from datetime import datetime, timezone
-import json
-import sys
+import os
+
+from dotenv import load_dotenv
 from sqlmodel import select
 from py_clob_client.client import ClobClient
 
@@ -9,6 +8,10 @@ from app.schemas.tracked_market import TrackedMarketSchema
 from app.models.tracked_market import TrackedMarket
 from app.databases.session import get_session
 
+load_dotenv()
+API_KEY = os.getenv("INTERNAL_API_KEY")
+POST_URL_BASE = "http://localhost:8000"
+HEADERS = {"x-api-key": API_KEY}
 
 
 def get_markets():
