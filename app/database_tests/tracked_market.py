@@ -109,4 +109,4 @@ if __name__ == "__main__":
 
 
 
-# python -m app.databases.tracked_market --insert
+# python -m app.database_tests.tracked_market --insert
