@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from sqlmodel import select
 
 from app.models.market_change_log import MarketChangeLog
-from app.databases.session import get_sync_session
+from app.core.session import get_sync_session
 
 def create_dummy_logs():
     now = datetime.now(timezone.utc)

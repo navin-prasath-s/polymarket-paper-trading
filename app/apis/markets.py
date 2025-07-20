@@ -4,14 +4,15 @@ from sqlmodel import select, Session
 from app.models.market import Market
 from app.schemas.market import Market as MarketSchema
 
-from app.databases.session import get_session
+from app.core.session import get_session
 
 router = APIRouter(prefix="/markets")
 
 
 @router.get("/",
             response_model=list[MarketSchema],
-            status_code=status.HTTP_200_OK)
+            status_code=status.HTTP_200_OK,
+            tags=["market"])
 async def get_tradable_markets(
         db: Session = Depends(get_session)
 ):
@@ -22,7 +23,8 @@ async def get_tradable_markets(
 
 @router.get("/{condition_id}",
             response_model=MarketSchema,
-            status_code=status.HTTP_200_OK)
+            status_code=status.HTTP_200_OK,
+            tags=["market"])
 async def get_market_by_condition_id(
         condition_id: str,
     db: Session = Depends(get_session)

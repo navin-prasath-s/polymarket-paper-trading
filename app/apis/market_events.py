@@ -7,16 +7,18 @@ from sqlmodel import select, Session
 
 from app.schemas.tracked_market import TrackedMarketSchema
 from app.models.market import Market
-from app.databases.session import get_session
+from app.core.session import get_session
 
 load_dotenv()
-router = APIRouter(prefix="/market_events")
-
 API_KEY = os.getenv("INTERNAL_API_KEY")
 
 
+router = APIRouter(prefix="/market_events")
+
+
 @router.post("/add",
-             status_code=status.HTTP_201_CREATED)
+             status_code=status.HTTP_201_CREATED,
+             tags=["market_events"])
 async def add_tracked_market(
     markets: list[TrackedMarketSchema],
     x_api_key: str = Header(...),
@@ -45,7 +47,8 @@ async def add_tracked_market(
 
 
 @router.post("/remove",
-             status_code=status.HTTP_200_OK)
+             status_code=status.HTTP_200_OK,
+             tags=["market_events"])
 async def remove_tracked_market(
     markets: list[TrackedMarketSchema],
     x_api_key: str = Header(...),

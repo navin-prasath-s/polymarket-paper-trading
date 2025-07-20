@@ -8,7 +8,7 @@ from py_clob_client.client import ClobClient
 from app.schemas.tracked_market import TrackedMarketSchema
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog, MarketChangeType
-from app.databases.session import get_sync_session
+from app.core.session import get_sync_session
 
 load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")

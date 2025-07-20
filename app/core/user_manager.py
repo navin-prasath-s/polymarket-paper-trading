@@ -8,7 +8,7 @@ from fastapi_users.authentication import CookieTransport, JWTStrategy, Authentic
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
 from app.models.user import User
-from app.databases.session import get_user_db
+from app.core.session import get_user_db
 
 load_dotenv()
 SECRET = os.getenv("JWT_SECRET")

@@ -4,7 +4,7 @@ from sqlmodel import select
 
 from app.models.tracked_market import TrackedMarket
 from app.schemas.tracked_market import TrackedMarketSchema
-from app.databases.session import get_sync_session
+from app.core.session import get_sync_session
 
 
 
