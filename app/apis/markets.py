@@ -8,6 +8,7 @@ from app.databases.session import get_session
 
 router = APIRouter(prefix="/markets")
 
+
 @router.get("/",
             response_model=list[MarketSchema],
             status_code=status.HTTP_200_OK)

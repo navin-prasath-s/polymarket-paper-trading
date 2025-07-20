@@ -1,8 +1,13 @@
 from typing import Generator
 import os
 
+from fastapi import Depends
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Session, create_engine
 from dotenv import load_dotenv
+
+from app.models.user import User
 
 load_dotenv()
 
@@ -24,3 +29,6 @@ def get_sync_session():
 def get_session() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
+
+async def get_user_db(session: AsyncSession = Depends(get_session)):
+    yield SQLAlchemyUserDatabase(session, User)
