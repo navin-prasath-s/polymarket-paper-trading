@@ -13,12 +13,12 @@ load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")
 
 
-router = APIRouter(prefix="/market_events")
+router = APIRouter(prefix="/market_events",
+                   tags=["market_events"])
 
 
 @router.post("/add",
-             status_code=status.HTTP_201_CREATED,
-             tags=["market_events"])
+             status_code=status.HTTP_201_CREATED)
 async def add_tracked_market(
     markets: list[TrackedMarketSchema],
     x_api_key: str = Header(...),
@@ -47,8 +47,7 @@ async def add_tracked_market(
 
 
 @router.post("/remove",
-             status_code=status.HTTP_200_OK,
-             tags=["market_events"])
+             status_code=status.HTTP_200_OK)
 async def remove_tracked_market(
     markets: list[TrackedMarketSchema],
     x_api_key: str = Header(...),
