@@ -11,7 +11,7 @@ from app.models.user import User
 from app.databases.session import get_user_db
 
 load_dotenv()
-SECRET = os.getenv("pZ0hJPPnf4MEcZ4gr5XVL9JIeE75ZPtUVraLAAifSCI")
+SECRET = os.getenv("JWT_SECRET")
 
 cookie_transport = CookieTransport(cookie_max_age=3600)
 

@@ -1,7 +1,4 @@
-from fastapi import FastAPI
-from app.apis import market_events, markets
+import uvicorn
 
-app = FastAPI()
-app.include_router(market_events.router)
-app.include_router(markets.router)
-# uvicorn app.main:app --reload --port 8000
+if __name__ == "__main__":
+    uvicorn.run("app.app:app", host="127.0.0.1", log_level="info")
