@@ -1,17 +1,12 @@
-from sqlmodel import SQLModel, Field
-from sqlalchemy.dialects.mysql import BINARY
-from sqlalchemy import Column
-import uuid
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Integer
 
-class User(SQLModel, table=True):
-    __tablename__ = "user"
 
-    id: uuid.UUID = Field(
-        default_factory=uuid.uuid4,
-        sa_column=Column(BINARY(16), primary_key=True)
-    )
-    email: str
-    hashed_password: str
-    is_active: bool = True
-    is_superuser: bool = False
-    is_verified: bool = False
+class Base(DeclarativeBase):
+    pass
+
+
+class User(SQLAlchemyBaseUserTableUUID, Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+

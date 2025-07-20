@@ -2,17 +2,14 @@ from logging.config import fileConfig
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, MetaData
 from alembic import context
 from sqlmodel import SQLModel
 
-
-from app.models.tracked_market import TrackedMarket
-from app.models.market_change_log import MarketChangeLog
-from app.models.market import Market
-from app.models.user import User
-
-
+# from app.models.tracked_market import TrackedMarket
+# from app.models.market_change_log import MarketChangeLog
+# from app.models.market import Market
+from app.models.user import Base, User
 
 load_dotenv()
 
@@ -38,17 +35,18 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-# Combine both metadatas
 
-# combined_metadata = MetaData()
-# for m in [Base.metadata, SQLModel.metadata]:
-#     for table in m.tables.values():
-#         if table.key not in combined_metadata.tables:
-#             table.tometadata(combined_metadata)
-# target_metadata = combined_metadata
 
-target_metadata = SQLModel.metadata
+
+target_metadata = MetaData()
+for metadata in [Base.metadata, SQLModel.metadata]:
+    for table in metadata.tables.values():
+        if table.key not in target_metadata.tables:
+            table.tometadata(target_metadata)
+
+# target_metadata = Base.metadata
+# target_metadata = SQLModel.metadata
+
 
 
 
@@ -100,7 +98,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             render_as_batch=True,  # Recommended for MySQL
-            user_module_prefix="sqlmodel.sql.sqltypes.",  # Handle SQLModel types
+            user_module_prefix="sqlmodel.sql.sqltypes.",
         )
 
         with context.begin_transaction():
