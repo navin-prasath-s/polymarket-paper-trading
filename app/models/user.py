@@ -8,5 +8,5 @@ class Base(DeclarativeBase):
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 

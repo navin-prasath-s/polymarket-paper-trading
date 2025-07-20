@@ -3,7 +3,7 @@ import uuid
 
 from dotenv import load_dotenv
 from fastapi import Request, Depends
-from fastapi_users import UUIDIDMixin, BaseUserManager, FastAPIUsers
+from fastapi_users import IntegerIDMixin, BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import CookieTransport, JWTStrategy, AuthenticationBackend
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
@@ -13,10 +13,14 @@ from app.core.session import get_user_db
 load_dotenv()
 SECRET = os.getenv("JWT_SECRET")
 
-cookie_transport = CookieTransport(cookie_name="token", cookie_max_age=3600)
+cookie_transport = CookieTransport(cookie_name="token",
+                                   cookie_max_age=3600,
+                                   cookie_secure=False)
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=SECRET,
+                       lifetime_seconds=3600,
+                       token_audience=["fastapi-users:auth"])
 
 
 auth_backend = AuthenticationBackend(
@@ -25,7 +29,7 @@ auth_backend = AuthenticationBackend(
     get_strategy=get_jwt_strategy,
 )
 
-class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
