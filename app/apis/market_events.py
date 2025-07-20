@@ -10,12 +10,12 @@ from app.models.market import Market
 from app.databases.session import get_session
 
 load_dotenv()
-router = APIRouter()
+router = APIRouter(prefix="/market_events")
 
 API_KEY = os.getenv("INTERNAL_API_KEY")
 
 
-@router.post("/market/add",
+@router.post("/add",
              status_code=status.HTTP_201_CREATED)
 async def add_tracked_market(
     markets: list[TrackedMarketSchema],
@@ -44,7 +44,7 @@ async def add_tracked_market(
     return {"message": f"{created} market(s) added"}
 
 
-@router.post("/market/remove",
+@router.post("/remove",
              status_code=status.HTTP_200_OK)
 async def remove_tracked_market(
     markets: list[TrackedMarketSchema],
