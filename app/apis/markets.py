@@ -6,9 +6,9 @@ from app.schemas.market import Market as MarketSchema
 
 from app.databases.session import get_session
 
-router = APIRouter()
+router = APIRouter(prefix="/markets")
 
-@router.get("/markets",
+@router.get("/",
             response_model=list[MarketSchema],
             status_code=status.HTTP_200_OK)
 async def get_tradable_markets(
@@ -19,7 +19,7 @@ async def get_tradable_markets(
     return results
 
 
-@router.get("/market/{condition_id}",
+@router.get("/{condition_id}",
             response_model=MarketSchema,
             status_code=status.HTTP_200_OK)
 async def get_market_by_condition_id(
