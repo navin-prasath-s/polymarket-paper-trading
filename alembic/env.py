@@ -2,14 +2,15 @@ from logging.config import fileConfig
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 from alembic import context
 from sqlmodel import SQLModel
+
 
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog
 from app.models.market import Market
+from app.models.user import User
 
 
 
@@ -38,7 +39,18 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+# Combine both metadatas
+
+# combined_metadata = MetaData()
+# for m in [Base.metadata, SQLModel.metadata]:
+#     for table in m.tables.values():
+#         if table.key not in combined_metadata.tables:
+#             table.tometadata(combined_metadata)
+# target_metadata = combined_metadata
+
 target_metadata = SQLModel.metadata
+
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -104,3 +116,9 @@ else:
 
 # alembic revision --autogenerate -m "comment"
 # alembic upgrade head
+
+# alembic downgrade base
+# alembic revision --autogenerate -m "initial"
+# alembic upgrade head
+# alembic history --verbose
+# alembic stamp 37a85f8bf2a6

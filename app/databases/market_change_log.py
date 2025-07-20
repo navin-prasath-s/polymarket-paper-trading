@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from sqlmodel import select
 
 from app.models.market_change_log import MarketChangeLog
-from app.databases.session import get_session
+from app.databases.session import get_sync_session
 
 def create_dummy_logs():
     now = datetime.now(timezone.utc)
@@ -17,21 +17,21 @@ def create_dummy_logs():
 
 def insert_logs():
     logs = create_dummy_logs()
-    with get_session() as session:
+    with get_sync_session() as session:
         session.add_all(logs)
         session.commit()
         print("Inserted dummy logs.")
 
 
 def fetch_logs():
-    with get_session() as session:
+    with get_sync_session() as session:
         logs = session.exec(select(MarketChangeLog)).all()
         for log in logs:
             print(log)
 
 
 def update_log():
-    with get_session() as session:
+    with get_sync_session() as session:
         stmt = select(MarketChangeLog).where(MarketChangeLog.condition_id == "cond_001")
         log = session.exec(stmt).first()
         if log:
@@ -44,7 +44,7 @@ def update_log():
 
 def delete_logs():
     dummy_logs = create_dummy_logs()
-    with get_session() as session:
+    with get_sync_session() as session:
         for log in dummy_logs:
             db_log = session.exec(
                 select(MarketChangeLog).where(MarketChangeLog.condition_id == log.condition_id)

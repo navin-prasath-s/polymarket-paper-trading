@@ -8,12 +8,13 @@ from py_clob_client.client import ClobClient
 from app.schemas.tracked_market import TrackedMarketSchema
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog, MarketChangeType
-from app.databases.session import get_session
+from app.databases.session import get_sync_session
 
 load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")
 POST_URL_BASE = "http://127.0.0.1:8000"
 HEADERS = {"x-api-key": API_KEY}
+
 
 
 def get_markets():
@@ -104,7 +105,7 @@ def handle_removed_markets(db, db_markets, removed_ids):
 
 
 def run_diff_check():
-    with get_session() as db:
+    with get_sync_session() as db:
         db_result = db.execute(select(TrackedMarket))
         db_markets = db_result.scalars().all()
         db_condition_ids = {m.condition_id for m in db_markets }

@@ -1,5 +1,7 @@
-from sqlmodel import Session, create_engine
+from typing import Generator
 import os
+
+from sqlmodel import Session, create_engine
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,5 +17,10 @@ url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 engine = create_engine(url, echo=True)
 
-def get_session():
+
+def get_sync_session():
     return Session(engine)
+
+def get_session() -> Generator[Session, None, None]:
+    with Session(engine) as session:
+        yield session

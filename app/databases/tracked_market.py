@@ -4,7 +4,7 @@ from sqlmodel import select
 
 from app.models.tracked_market import TrackedMarket
 from app.schemas.tracked_market import TrackedMarketSchema
-from app.databases.session import get_session
+from app.databases.session import get_sync_session
 
 
 
@@ -46,7 +46,7 @@ def create_dummy_data():
 
 def insert_dummy_data():
     dummy_data = create_dummy_data()
-    with get_session() as session:
+    with get_sync_session() as session:
         session.add_all(dummy_data)
         session.commit()
         print("Dummy data inserted.")
@@ -54,7 +54,7 @@ def insert_dummy_data():
 
 def delete_dummy_data():
     dummy_data = create_dummy_data()
-    with get_session() as session:
+    with get_sync_session() as session:
         for obj in dummy_data:
             db_obj = session.get(TrackedMarket, obj.condition_id)
             if db_obj:
@@ -64,7 +64,7 @@ def delete_dummy_data():
 
 
 def fetch_first_dummy():
-    with get_session() as session:
+    with get_sync_session() as session:
         statement = select(TrackedMarket)
         result = session.exec(statement).first()
         if result:
@@ -74,7 +74,7 @@ def fetch_first_dummy():
             print("No data found in DB.")
 
 def update_first_dummy():
-    with get_session() as session:
+    with get_sync_session() as session:
         statement = select(TrackedMarket)
         result = session.exec(statement).first()
 
