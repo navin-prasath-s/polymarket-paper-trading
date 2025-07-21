@@ -1,36 +1,83 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, Header, HTTPException, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException, Header
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.tracked_market import TrackedMarketCreate
-from app.models.market import Market
 from app.core.session import get_async_session
+from app.models.market import Market, MarketRead, MarketCreate
 
 load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")
 
 
-router = APIRouter(prefix="/market_events",
-                   tags=["market_events"])
+
+router = APIRouter(prefix="/market",
+                   tags=["market"])
 
 
-@router.post("/add",
+@router.get("/",
+            response_model=list[MarketRead],
+            status_code=status.HTTP_200_OK,
+            description="Retrieve all tradable markets.")
+async def get_tradable_markets(
+        db: AsyncSession = Depends(get_async_session)
+) -> list[MarketRead]:
+
+    try:
+        stmt = select(Market).where(Market.is_tradable == True)
+        results = await db.execute(stmt)
+        return results.scalars().all()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch markets {e}"
+        )
+
+
+@router.get("/{condition_id}",
+            response_model=MarketRead,
+            status_code=status.HTTP_200_OK,
+            description="Retrieve a market by its condition ID.")
+async def get_market_by_condition_id(
+        condition_id: str,
+        db: AsyncSession = Depends(get_async_session)
+) -> MarketRead:
+
+    try:
+        stmt = select(Market).where(Market.condition_id == condition_id)
+        result = await db.execute(stmt)
+        market = result.scalar_one_or_none()
+        if not market:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Market not found"
+            )
+        return market
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve market {e}"
+        )
+
+
+@router.post("/",
              status_code=status.HTTP_201_CREATED,
-             description="Creates a new market.")
+             description="Creates a new tradable market.")
 async def add_tracked_market(
-    markets: list[TrackedMarketCreate],
+    markets: list[MarketCreate],
     x_api_key: str = Header(...),
     db: AsyncSession = Depends(get_async_session)
     ) -> dict:
-    print(markets)
+
     if x_api_key != API_KEY:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Unauthorized")
     if not markets:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No markets provided")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="No markets provided")
 
     created = 0
     errors = []
@@ -66,7 +113,8 @@ async def add_tracked_market(
         return {"message": f"{created} market(s) added"}
 
 
-@router.put("/remove",
+
+@router.patch("/untradable",
              status_code=status.HTTP_200_OK,
              description="Marks a market as untradable.")
 async def remove_tracked_market(
