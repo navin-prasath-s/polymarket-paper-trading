@@ -1,16 +1,15 @@
 import argparse
 
-from sqlmodel import select
+from sqlalchemy.future import select
 
-from app.models.tracked_market import TrackedMarket
-from app.schemas.tracked_market import TrackedMarketSchema
-from app.core.session import get_sync_session
+from app.models.tracked_market import TrackedMarket, TrackedMarketCreate
+from app.core.session import get_async_session
 
 
 
 def create_dummy_data():
     schema_data = [
-        TrackedMarketSchema(
+        TrackedMarketCreate(
             condition_id="cond_001",
             enable_order_book=True,
             accepting_orders=True,
@@ -19,7 +18,7 @@ def create_dummy_data():
             archived=False,
             slug="example-market-1"
         ),
-        TrackedMarketSchema(
+        TrackedMarketCreate(
             condition_id="cond_002",
             enable_order_book=False,
             accepting_orders=True,
@@ -28,7 +27,7 @@ def create_dummy_data():
             archived=False,
             slug="example-market-2"
         ),
-        TrackedMarketSchema(
+        TrackedMarketCreate(
             condition_id="cond_003",
             enable_order_book=True,
             accepting_orders=False,
@@ -44,39 +43,39 @@ def create_dummy_data():
 
 
 
-def insert_dummy_data():
+async def insert_dummy_data():
     dummy_data = create_dummy_data()
-    with get_sync_session() as session:
+    async with get_async_session() as session:
         session.add_all(dummy_data)
-        session.commit()
+        await session.commit()
         print("Dummy data inserted.")
 
 
-def delete_dummy_data():
+async def delete_dummy_data():
     dummy_data = create_dummy_data()
-    with get_sync_session() as session:
+    async with get_async_session() as session:
         for obj in dummy_data:
-            db_obj = session.get(TrackedMarket, obj.condition_id)
+            db_obj = await session.get(TrackedMarket, obj.condition_id)
             if db_obj:
-                session.delete(db_obj)
-        session.commit()
+                await session.delete(db_obj)
+        await session.commit()
         print("Dummy data deleted.")
 
 
-def fetch_first_dummy():
-    with get_sync_session() as session:
+async def fetch_first_dummy():
+    async with get_async_session() as session:
         statement = select(TrackedMarket)
-        result = session.exec(statement).first()
+        result = (await session.execute(statement)).scalars().first()
         if result:
-            schema_obj = TrackedMarketSchema.model_validate(result)
+            schema_obj = TrackedMarketCreate.model_validate(result)
             print("First DB row as schema:", schema_obj.model_dump_json(indent=2))
         else:
             print("No data found in DB.")
 
-def update_first_dummy():
-    with get_sync_session() as session:
+async def update_first_dummy():
+    async with get_async_session() as session:
         statement = select(TrackedMarket)
-        result = session.exec(statement).first()
+        result = (await session.execute(statement)).scalars().first()
 
         if not result:
             print("No records found to update.")
@@ -86,7 +85,7 @@ def update_first_dummy():
         result.accepting_orders = False
 
         session.add(result)
-        session.commit()
+        await session.commit()
         print("First dummy record updated.")
 
 if __name__ == "__main__":
@@ -97,14 +96,16 @@ if __name__ == "__main__":
     parser.add_argument("--update", action="store_true")
     args = parser.parse_args()
 
-    if args.insert:
-        insert_dummy_data()
-    if args.delete:
-        delete_dummy_data()
-    if args.fetch:
-        fetch_first_dummy()
-    if args.update:
-        update_first_dummy()
+
+    async def main():
+        if args.insert:
+            await insert_dummy_data()
+        if args.delete:
+            await delete_dummy_data()
+        if args.fetch:
+            await fetch_first_dummy()
+        if args.update:
+            await update_first_dummy()
 
 
 

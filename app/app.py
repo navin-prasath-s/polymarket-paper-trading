@@ -1,8 +1,7 @@
 import logging
 
-from fastapi import FastAPI, Cookie
-# from app.apis import market_events, markets, auth
-from app.apis import auth
+from fastapi import FastAPI
+from app.apis import auth, market_events, markets, auth
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -14,20 +13,8 @@ async def root():
     return {"message": "Hello"}
 
 app.include_router(auth.router)
-
-# @app.get("/debug-validate")
-# def debug_validate(token: str | None = Cookie(default=None)):
-#     import jwt, os
-#     payload = None
-#     try:
-#         print(f"Decoding token: {token}")
-#         payload = jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
-#     except Exception as e:
-#         return {"error": str(e)}
-#     return {"payload": payload}
-
-# app.include_router(market_events.router)
-# app.include_router(markets.router)
+app.include_router(market_events.router)
+app.include_router(markets.router)
 
 
 
