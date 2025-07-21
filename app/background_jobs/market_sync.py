@@ -8,11 +8,11 @@ from py_clob_client.client import ClobClient
 
 from app.models.tracked_market import TrackedMarket, TrackedMarketCreate
 from app.models.market_change_log import MarketChangeLog, MarketChangeType
-from app.core.session import get_async_session, engine
+from app.core.session import get_async_manager, engine
 
 load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")
-POST_URL_BASE = "http://127.0.0.1:8000"
+URL_BASE = "http://127.0.0.1:8080"
 HEADERS = {"x-api-key": API_KEY}
 
 
@@ -44,6 +44,7 @@ async def handle_new_markets(db, clob_markets, newly_added_ids, client: httpx.As
     to_post = []
     for market in clob_markets:
         if market["condition_id"] in newly_added_ids:
+
             try:
                 schema_obj = TrackedMarketCreate(**market)
                 model_obj = TrackedMarket(**schema_obj.model_dump())
@@ -58,17 +59,20 @@ async def handle_new_markets(db, clob_markets, newly_added_ids, client: httpx.As
                 await db.commit()
                 await db.refresh(model_obj)
                 to_post.append(schema_obj)
-                print(f"Added: {schema_obj.condition_id}")
+
             except Exception as e:
                 await db.rollback()
                 print(f"Insert failed for {market['condition_id']}: {e}")
 
     if to_post:
+        print(f"Posting {len(to_post)} new markets")
         try:
-            response = httpx.post(f"{POST_URL_BASE}/market_events/add",
+            response = await client.post(f"{URL_BASE}/market_events/add",
                                   json=[m.model_dump() for m in to_post],
                                   headers=HEADERS,
                                   timeout=90)
+            print("RESPONSE STATUS:", response.status_code)
+            print("RESPONSE BODY:", response.text)
             response.raise_for_status()
         except Exception as e:
             print(f"POST /market_events/add failed: {e}")
@@ -90,23 +94,25 @@ async def handle_removed_markets(db, db_markets, removed_ids, client: httpx.Asyn
                 db.add(log)
 
                 await db.commit()
-                print(f"Removed: {m.condition_id}")
             except Exception as e:
                 await db.rollback()
                 print(f"Delete failed for {m.condition_id}: {e}")
 
     if to_post:
+        print(f"Removing {len(to_post)} old markets")
         try:
-            response = httpx.post(f"{POST_URL_BASE}/market_events/remove",
-                                  json=[m.model_dump() for m in to_post],
-                                  headers=HEADERS)
+            response = await client.put(f"{URL_BASE}/market_events/remove",
+                                 json=[m.model_dump() for m in to_post],
+                                 headers=HEADERS)
+            print("RESPONSE STATUS:", response.status_code)
+            print("RESPONSE BODY:", response.text)
             response.raise_for_status()
         except Exception as e:
             print(f"POST /market_events/remove failed: {e}")
 
 
 async def run_diff_check():
-    async with get_async_session() as db:
+    async with get_async_manager() as db:
         db_result = await db.execute(select(TrackedMarket))
         db_markets = db_result.scalars().all()
         db_condition_ids = {m.condition_id for m in db_markets }

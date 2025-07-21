@@ -27,8 +27,12 @@ async_session_maker = async_sessionmaker(engine, autoflush=False, expire_on_comm
 # def get_sync_session():
 #     return Session(engine)
 
-@asynccontextmanager
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker() as session:
+        yield session
+
+@asynccontextmanager
+async def get_async_manager() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
 

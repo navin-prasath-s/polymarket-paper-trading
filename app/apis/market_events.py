@@ -26,13 +26,14 @@ async def add_tracked_market(
     x_api_key: str = Header(...),
     db: AsyncSession = Depends(get_async_session)
     ) -> dict:
-
+    print(markets)
     if x_api_key != API_KEY:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
     if not markets:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No markets provided")
 
     created = 0
+    errors = []
     for market in markets:
         new_market = Market(
             condition_id=market.condition_id,
@@ -46,12 +47,23 @@ async def add_tracked_market(
             created += 1
         except IntegrityError:
             await db.rollback()
-            print(f"Market with condition_id {market.condition_id} already exists.")
+            errors.append(f"Market with condition_id {market.condition_id} already exists.")
         except Exception as e:
             await db.rollback()
-            print(f"Failed to add market {market.condition_id}: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to add market {market.condition_id}: {str(e)}"
+            )
 
-    return {"message": f"{created} market(s) added"}
+    if errors and created == 0:
+        raise HTTPException(status_code=400, detail=errors)
+    elif errors:
+        return {
+            "message": f"{created} market(s) added, {len(errors)} duplicate(s) skipped",
+            "errors": errors
+        }
+    else:
+        return {"message": f"{created} market(s) added"}
 
 
 @router.put("/remove",
@@ -67,18 +79,25 @@ async def remove_tracked_market(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
     if not condition_ids:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No condition IDs provided")
+    try:
+        stmt = select(Market).where(Market.condition_id.in_(condition_ids))
+        result = await db.execute(stmt)
+        markets = result.scalars().all()
 
-    stmt = select(Market).where(Market.condition_id.in_(condition_ids))
-    result = await db.execute(stmt)
-    markets = result.scalars().all()
+        updated = 0
+        for market in markets:
+            market.is_tradable = False
+            db.add(market)
+            updated += 1
 
-    updated = 0
-    for market in markets:
-        market.is_tradable = False
-        db.add(market)
-        updated += 1
+        await db.commit()
 
-    await db.commit()
+        return {"message": f"{updated} market(s) marked as untradable"}
 
-    return {"message": f"{updated} market(s) marked as untradable"}
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unknown error: {str(e)}"
+        )
 
