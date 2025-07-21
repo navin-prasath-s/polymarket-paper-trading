@@ -41,7 +41,7 @@ async def get_tradable_markets(
             response_model=MarketRead,
             status_code=status.HTTP_200_OK,
             description="Retrieve a market by its condition ID.")
-async def get_market_by_condition_id(
+async def get_tradable_market_by_condition_id(
         condition_id: str,
         db: AsyncSession = Depends(get_async_session)
 ) -> MarketRead:
@@ -65,8 +65,8 @@ async def get_market_by_condition_id(
 
 @router.post("/",
              status_code=status.HTTP_201_CREATED,
-             description="Creates a new tradable market.")
-async def add_tracked_market(
+             description="Creates one or more new tradable market.")
+async def add_tradable_market(
     markets: list[MarketCreate],
     x_api_key: str = Header(...),
     db: AsyncSession = Depends(get_async_session)
@@ -114,10 +114,10 @@ async def add_tracked_market(
 
 
 
-@router.patch("/untradable",
+@router.patch("/untradable/",
              status_code=status.HTTP_200_OK,
-             description="Marks a market as untradable.")
-async def remove_tracked_market(
+             description="Marks one or more market as untradable.")
+async def mark_markets_untradable(
     condition_ids: list[str],
     x_api_key: str = Header(...),
     db: AsyncSession = Depends(get_async_session)

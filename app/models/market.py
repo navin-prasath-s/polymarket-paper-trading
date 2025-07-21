@@ -9,7 +9,7 @@ class MarketBase(SQLModel):
 
 
 class MarketRead(MarketBase):
-    pass
+    market_slug: str
 
 class MarketCreate(MarketBase):
     market_slug: str

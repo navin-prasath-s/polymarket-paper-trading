@@ -67,7 +67,7 @@ async def handle_new_markets(db, clob_markets, newly_added_ids, client: httpx.As
     if to_post:
         print(f"Posting {len(to_post)} new markets")
         try:
-            response = await client.post(f"{URL_BASE}/market_events/add",
+            response = await client.post(f"{URL_BASE}/market/",
                                   json=[m.model_dump() for m in to_post],
                                   headers=HEADERS,
                                   timeout=90)
@@ -101,7 +101,7 @@ async def handle_removed_markets(db, db_markets, removed_ids, client: httpx.Asyn
     if to_post:
         print(f"Removing {len(to_post)} old markets")
         try:
-            response = await client.put(f"{URL_BASE}/market_events/remove",
+            response = await client.patch(f"{URL_BASE}/market/untradable/",
                                  json=[m.model_dump() for m in to_post],
                                  headers=HEADERS)
             print("RESPONSE STATUS:", response.status_code)
