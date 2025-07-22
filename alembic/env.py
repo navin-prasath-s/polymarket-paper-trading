@@ -9,8 +9,7 @@ from sqlmodel import SQLModel
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog
 from app.models.market import Market
-from app.models.user_profile import UserProfile
-from app.models.user import Base, User
+from app.models.user import Base, User, UserProfile
 
 load_dotenv()
 

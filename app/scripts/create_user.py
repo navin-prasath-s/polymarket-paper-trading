@@ -17,4 +17,5 @@ if __name__ == "__main__":
         "password": "superuserpass"
     }
 
+
     create_user(payload)
