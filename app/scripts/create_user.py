@@ -12,9 +12,14 @@ def create_user(payload: dict):
         print(response.text)
 
 if __name__ == "__main__":
+    # payload = {
+    #     "email": "superuser@example.com",
+    #     "password": "superuserpass"
+    # }
+
     payload = {
-        "email": "superuser@example.com",
-        "password": "superuserpass"
+        "email": "user1@example.com",
+        "password": "user1pass"
     }
 
 

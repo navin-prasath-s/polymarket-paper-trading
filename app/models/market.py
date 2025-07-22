@@ -3,16 +3,16 @@ from sqlmodel import SQLModel, Field
 
 class MarketBase(SQLModel):
     condition_id: str
+    market_slug: str
 
     class Config:
         from_attributes = True
 
 
 class MarketRead(MarketBase):
-    market_slug: str
+    pass
 
 class MarketCreate(MarketBase):
-    market_slug: str
     is_tradable: bool = True
 
 class Market(MarketBase, table=True):

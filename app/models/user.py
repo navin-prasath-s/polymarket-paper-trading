@@ -17,18 +17,29 @@ class UserProfileBase(SQLModel):
 class UserProfile(UserProfileBase,table=True):
     __tablename__ = "user_profiles"
 
-
     user_id: int = Field(foreign_key="users.id", primary_key=True)
     name: str = Field(nullable=False)
     user_name: str = Field(unique=True, nullable=False)
     balance: float = Field(default=1000.0, nullable=False)
 
-    user: Optional["User"] = Relationship(back_populates="user_profile")
+    user: "User" = Relationship(back_populates="user_profile")
 
     model_config = {
         "arbitrary_types_allowed": True,
         "from_attributes": True,
     }
+
+
+class UserProfileCreate(UserProfileBase):
+    name: str
+    user_name: str
+    balance: float = 1000.0
+
+
+
+
+
+
 
 class Base(DeclarativeBase):
     pass
@@ -41,6 +52,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         back_populates="user",
         sa_relationship_kwargs={"uselist": False, "cascade": "all, delete-orphan"}
     )
+
+
 
 class UserRead(schemas.BaseUser[int]):
     pass
