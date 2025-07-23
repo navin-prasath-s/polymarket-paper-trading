@@ -1,9 +1,10 @@
-from typing import Optional, ClassVar
+from typing import Optional, Annotated
+from decimal import Decimal
 
 from fastapi_users import schemas
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer
+from sqlalchemy import Integer, CheckConstraint
 
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -17,10 +18,18 @@ class UserProfileBase(SQLModel):
 class UserProfile(UserProfileBase,table=True):
     __tablename__ = "user_profiles"
 
+    __table_args__ = (
+        CheckConstraint("balance >= 0", name="balance_non_negative"),
+    )
+
     user_id: int = Field(foreign_key="users.id", primary_key=True)
     name: str = Field(nullable=False)
     user_name: str = Field(unique=True, nullable=False)
-    balance: float = Field(default=1000.0, nullable=False)
+    # balance: Annotated[float, Field(default=1000.0, nullable=False)]
+    balance: Annotated[Decimal, Field(ge=0,
+                                      max_digits=10,
+                                      decimal_places=2,
+                                      nullable=False)] = Decimal("1000.00")
 
     user: "User" = Relationship(back_populates="user_profile")
 
@@ -33,9 +42,6 @@ class UserProfile(UserProfileBase,table=True):
 class UserProfileCreate(UserProfileBase):
     name: str
     user_name: str
-    balance: float = 1000.0
-
-
 
 
 
