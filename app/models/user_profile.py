@@ -35,3 +35,9 @@ class UserProfile(UserProfileBase,table=True):
 class UserProfileCreate(UserProfileBase):
     name: str
     user_name: str
+
+
+class UserProfileRead(UserProfileBase):
+    name: str
+    user_name: str
+    balance: Decimal
