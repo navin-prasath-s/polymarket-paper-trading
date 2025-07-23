@@ -5,10 +5,11 @@ import os
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlmodel import Session
 from dotenv import load_dotenv
 
 from app.models.user import User
+
+
 load_dotenv()
 
 db_user = os.getenv("DB_USER")
@@ -26,6 +27,8 @@ async_session_maker = async_sessionmaker(engine, autoflush=False, expire_on_comm
 
 # def get_sync_session():
 #     return Session(engine)
+
+
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:

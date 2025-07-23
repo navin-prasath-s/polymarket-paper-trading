@@ -1,5 +1,4 @@
 import os
-import uuid
 
 from dotenv import load_dotenv
 from fastapi import Request, Depends
@@ -7,8 +6,8 @@ from fastapi_users import IntegerIDMixin, BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import CookieTransport, JWTStrategy, AuthenticationBackend
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
-from app.models.user import User
 from app.core.session import get_user_db
+from app.models.user import User
 
 load_dotenv()
 SECRET = os.getenv("JWT_SECRET")

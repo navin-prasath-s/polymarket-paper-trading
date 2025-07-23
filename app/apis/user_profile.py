@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.session import get_async_session
 from app.core.user_manager import current_active_user
-from app.models.user import UserProfile, UserProfileCreate, User
+from app.models.user import User
+from app.models.user_profile import UserProfile, UserProfileCreate
 
 
 router = APIRouter(prefix="/user_profile",

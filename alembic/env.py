@@ -2,14 +2,16 @@ from logging.config import fileConfig
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool, MetaData
+from sqlalchemy import engine_from_config, pool
 from alembic import context
 from sqlmodel import SQLModel
 
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog
 from app.models.market import Market
-from app.models.user import Base, User, UserProfile
+from app.models.user import User
+from app.models.user_profile import UserProfile
+
 
 load_dotenv()
 
@@ -38,14 +40,14 @@ if config.config_file_name is not None:
 
 
 
-target_metadata = MetaData()
-for metadata in [Base.metadata, SQLModel.metadata]:
-    for table in metadata.tables.values():
-        if table.key not in target_metadata.tables:
-            table.tometadata(target_metadata)
+# target_metadata = MetaData()
+# for metadata in [Base.metadata, SQLModel.metadata]:
+#     for table in metadata.tables.values():
+#         if table.key not in target_metadata.tables:
+#             table.tometadata(target_metadata)
 
 # target_metadata = Base.metadata
-# target_metadata = SQLModel.metadata
+target_metadata = SQLModel.metadata
 
 
 

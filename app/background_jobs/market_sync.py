@@ -12,7 +12,7 @@ from app.core.session import get_async_manager, engine
 
 load_dotenv()
 API_KEY = os.getenv("INTERNAL_API_KEY")
-URL_BASE = "http://127.0.0.1:8080"
+URL_BASE = os.getenv("API_BASE_URL")
 HEADERS = {"x-api-key": API_KEY}
 
 
@@ -134,3 +134,6 @@ async def run_diff_check():
 
 if __name__ == "__main__":
     asyncio.run(run_diff_check())
+
+
+
