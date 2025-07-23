@@ -56,6 +56,8 @@ async def get_tradable_market_by_condition_id(
                 detail="Market not found"
             )
         return market
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -85,7 +87,6 @@ async def add_tradable_market(
         new_market = Market(
             condition_id=market.condition_id,
             market_slug=market.market_slug,
-            is_tradable=True
         )
         try:
             db.add(new_market)

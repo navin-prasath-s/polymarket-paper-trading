@@ -13,7 +13,7 @@ class MarketRead(MarketBase):
     pass
 
 class MarketCreate(MarketBase):
-    is_tradable: bool = True
+    pass
 
 class Market(MarketBase, table=True):
     __tablename__ = "markets"
@@ -21,3 +21,6 @@ class Market(MarketBase, table=True):
     condition_id: str = Field(primary_key=True)
     market_slug: str = Field(nullable=False)
     is_tradable: bool = Field(default=True, nullable=False)
+
+
+# TODO: Add unique constraint on condition_id
