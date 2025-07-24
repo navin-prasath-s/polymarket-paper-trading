@@ -66,6 +66,7 @@ async def get_tradable_market_by_condition_id(
 
 
 @router.post("/",
+
              status_code=status.HTTP_201_CREATED,
              description="Creates one or more new tradable market.")
 async def add_tradable_market(
