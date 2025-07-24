@@ -41,3 +41,7 @@ class UserProfileRead(UserProfileBase):
     name: str
     user_name: str
     balance: Decimal
+
+
+
+    
