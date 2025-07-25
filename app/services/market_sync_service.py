@@ -102,7 +102,7 @@ class MarketSyncService:
     @staticmethod
     async def sync_markets(db: AsyncSession) -> dict:
         # 1. Get all live CLOB markets
-        clob_markets = ClobService().get_markets()
+        clob_markets = ClobService().get_clob_markets_accepting_orders()
         clob_condition_ids = {market['condition_id'] for market in clob_markets}
 
         # 2. Get all current tracked (hot DB) markets

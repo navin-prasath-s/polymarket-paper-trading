@@ -2,8 +2,11 @@ from py_clob_client.client import ClobClient
 
 class ClobService:
 
+
+
     @staticmethod
-    def get_markets() -> list[dict]:
+    def get_clob_markets_accepting_orders() -> list[dict]:
+        """Fetch all CLOB markets and return those who accepts orders."""
         host = "https://clob.polymarket.com"
         open_client: ClobClient = ClobClient(host=host)
         start_cursor = "MA=="
@@ -25,3 +28,59 @@ class ClobService:
         ]
 
         return filtered
+
+    @staticmethod
+    def get_clob_market_by_condition_id(condition_id: str) -> dict | None:
+        """Fetch a single CLOB market by its condition ID."""
+        host = "https://clob.polymarket.com"
+        open_client: ClobClient = ClobClient(host=host)
+
+        try:
+            response = open_client.get_market(condition_id)
+            return response.get("data")
+        except Exception as e:
+            print(f"Error fetching market for condition_id {condition_id}: {e}")
+            return None
+
+    @staticmethod
+    def get_market_price_by_token_id(token_id: str) -> dict[str, str] | None:
+        """Fetch the market price for a given token ID."""
+        host = "https://clob.polymarket.com"
+        open_client: ClobClient = ClobClient(host=host)
+
+        try:
+            response_buy = open_client.get_price(token_id, side="BUY")
+            response_sell = open_client.get_price(token_id, side="SELL")
+            if not response_buy or not response_sell:
+                print(f"No price data found for token_id {token_id}")
+                return None
+            prices = {
+                "buy": response_buy.get("price"),
+                "sell": response_sell.get("price")
+            }
+            return prices
+        except Exception as e:
+            print(f"Error fetching market price for token_id {token_id}: {e}")
+            return None
+
+
+    # TODO: implement func to get prices ofr all options using def get_prices(self, params: list[BookParams]):
+
+
+    @staticmethod
+    def get_book_by_token_id(token_id: str) -> dict[str, list[dict[str, str]]] | None:
+        """Fetch the order book for a given token ID."""
+        host = "https://clob.polymarket.com"
+        open_client: ClobClient = ClobClient(host=host)
+
+        try:
+            response = open_client.get_order_book(token_id)
+            bids = [{"price": bid.price, "size": bid.size} for bid in response.bids]
+            asks = [{"price": ask.price, "size": ask.size} for ask in response.asks]
+            return {"bids": bids, "asks": asks}
+
+        except Exception as e:
+            print(f"Error fetching order book for token_id {token_id}: {e}")
+            return None
+
+
