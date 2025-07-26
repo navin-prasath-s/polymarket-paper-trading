@@ -1,4 +1,10 @@
-from sqlmodel import SQLModel, Field
+from typing import TYPE_CHECKING, Optional
+
+from sqlmodel import SQLModel, Field, Relationship
+
+if TYPE_CHECKING:
+    from app.models.market import Market
+
 
 class MarketOutcomeBase(SQLModel):
     class Config:
@@ -16,3 +22,4 @@ class MarketOutcome(MarketOutcomeBase, table=True):
     outcome_text: str = Field(default=None,
                               nullable=True)
 
+    market_obj: Optional["Market"] = Relationship(back_populates="outcomes")
