@@ -5,8 +5,6 @@ from sqlmodel import SQLModel, Field
 from sqlalchemy import CheckConstraint
 
 class UserProfileBase(SQLModel):
-    pass
-
     class Config:
         from_attributes = True
 
@@ -22,7 +20,7 @@ class UserProfile(UserProfileBase,table=True):
     name: str = Field(nullable=False)
     user_name: str = Field(unique=True, nullable=False)
     balance: Annotated[Decimal, Field(ge=0,
-                                      max_digits=10,
+                                      max_digits=14,
                                       decimal_places=2,
                                       nullable=False)] = Decimal("1000.00")
 

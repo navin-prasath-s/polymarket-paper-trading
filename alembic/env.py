@@ -6,11 +6,18 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from sqlmodel import SQLModel
 
+from app.models.user import User
+from app.models.user_profile import UserProfile
+
 from app.models.tracked_market import TrackedMarket
 from app.models.market_change_log import MarketChangeLog
 from app.models.market import Market
-from app.models.user import User
-from app.models.user_profile import UserProfile
+from app.models.market_outcome import MarketOutcome
+
+from app.models.user_position import UserPosition
+from app.models.order import Order
+from app.models.order_fill import OrderFill
+
 
 
 load_dotenv()
