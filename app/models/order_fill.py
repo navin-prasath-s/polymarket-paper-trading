@@ -18,12 +18,12 @@ class OrderFill(OrderFillBase, table=True):
 
     __table_args__ = (
         CheckConstraint(
-            "shares >= 0",
-            name="_shares_non_negative"
+            "fill_shares >= 0",
+            name="_fill_shares_non_negative"
         ),
         CheckConstraint(
-            "price >= 0",
-            name="_price_non_negative"
+            "fill_price >= 0",
+            name="_fill_price_non_negative"
         ),
     )
 
