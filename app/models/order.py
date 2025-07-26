@@ -43,6 +43,10 @@ class Order(OrderBase, table=True):
             "price >= 0",
             name="_order_price_non_negative"
         ),
+        CheckConstraint(
+            "amount_usdc >= 0",
+            name="_amount_usdc_non_negative"
+        ),
     )
 
     order_id: int = Field( primary_key=True)
@@ -60,6 +64,11 @@ class Order(OrderBase, table=True):
     order_type : OrderType = Field(nullable=False)
 
     status: OrderStatus = Field(nullable=False)
+
+    amount_usdc: Annotated[Decimal, Field(ge=0,
+                                     max_digits=14,
+                                     decimal_places=2,
+                                     nullable=False)] = Decimal('0')
 
     shares: Annotated[Decimal, Field(ge=0,
                                      max_digits=14,
