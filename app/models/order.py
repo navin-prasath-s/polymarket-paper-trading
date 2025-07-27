@@ -61,7 +61,7 @@ class Order(OrderBase, table=True):
 
     side: OrderSide = Field(nullable=False)
 
-    order_type : OrderType = Field(nullable=False)
+    order_type: OrderType = Field(nullable=False)
 
     status: OrderStatus = Field(nullable=False)
 
@@ -83,3 +83,22 @@ class Order(OrderBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class OrderBuyCreate(OrderBase):
+    market: str
+    token: str
+    order_type: OrderType
+    amount_usdc: Annotated[Decimal, Field(ge=0,
+                                     max_digits=14,
+                                     decimal_places=2,
+                                     nullable=False)] = Decimal('0')
+
+class OrderSellCreate(OrderBase):
+    market: str
+    token: str
+    order_type: OrderType
+    shares: Annotated[Decimal, Field(ge=0,
+                                max_digits=14,
+                                decimal_places=2,
+                                nullable=False)] = Decimal('0')

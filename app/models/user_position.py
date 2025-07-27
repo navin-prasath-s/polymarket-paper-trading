@@ -31,3 +31,8 @@ class UserPosition(UserPositionBase, table=True):
                                      max_digits=14,
                                      decimal_places=2,
                                      nullable=False)] = Decimal('0')
+
+
+# class UserPositionCreate(UserPositionBase):
+#     market: str = Field(primary_key=True)
+#     token: str = Field(primary_key=True)

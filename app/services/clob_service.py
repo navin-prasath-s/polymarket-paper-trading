@@ -2,8 +2,6 @@ from py_clob_client.client import ClobClient
 
 class ClobService:
 
-
-
     @staticmethod
     def get_clob_markets_accepting_orders() -> list[dict]:
         """Fetch all CLOB markets and return those who accepts orders."""
@@ -68,7 +66,9 @@ class ClobService:
 
 
     @staticmethod
-    def get_book_by_token_id(token_id: str) -> dict[str, list[dict[str, str]]] | None:
+    def get_book_by_token_id(token_id: str,
+                             side: str | None = None) -> (dict[str, list[dict[str, str]]] |
+                                                          list[dict[str, str]]| None):
         """Fetch the order book for a given token ID."""
         host = "https://clob.polymarket.com"
         open_client: ClobClient = ClobClient(host=host)
@@ -77,6 +77,15 @@ class ClobService:
             response = open_client.get_order_book(token_id)
             bids = [{"price": bid.price, "size": bid.size} for bid in response.bids]
             asks = [{"price": ask.price, "size": ask.size} for ask in response.asks]
+
+            if side is not None:
+                if side == "BUY":
+                    return asks
+                elif side == "SELL":
+                    return bids
+                else:
+                    raise ValueError(f"Invalid side: {side}. Use 'BUY' or 'SELL'.")
+
             return {"bids": bids, "asks": asks}
 
         except Exception as e:
