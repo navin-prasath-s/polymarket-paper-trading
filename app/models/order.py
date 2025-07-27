@@ -1,10 +1,13 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, TYPE_CHECKING
 
 from sqlalchemy import ForeignKeyConstraint, CheckConstraint
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+
+if TYPE_CHECKING:
+    from app.models.order_fill import OrderFill
 
 
 class OrderSide(str, Enum):
@@ -83,6 +86,8 @@ class Order(OrderBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    fills: list["OrderFill"] | None = Relationship(back_populates="order_obj")
 
 
 class OrderBuyCreate(OrderBase):

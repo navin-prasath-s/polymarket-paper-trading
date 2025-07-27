@@ -1,11 +1,12 @@
 from decimal import Decimal
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
-
+if TYPE_CHECKING:
+    from app.models.order import Order
 
 
 class OrderFillBase(SQLModel):
@@ -45,3 +46,5 @@ class OrderFill(OrderFillBase, table=True):
                                      nullable=False)] = Decimal('0')
 
     filled_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    order_obj: Optional["Order"] = Relationship(back_populates="fills")

@@ -41,15 +41,15 @@ class OrderService:
         if total_cost < Decimal(amount):
             return {
                 "status": "exceeds_liquidity",
-                "max_amount": float(total_cost),
-                "max_shares": float(total_shares),
+                "max_amount": round(float(total_cost), 2),
+                "max_shares": round(float(total_shares), 2),
                 "fills": fills
             }
 
         return {
             "status": "filled",
-            "shares_filled": float(total_shares),
-            "total_cost": float(total_cost),
+            "shares_filled": round(float(total_shares),2),
+            "total_cost": round(float(total_cost), 2),
             "fills": fills
         }
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     from decimal import Decimal
 
     token_data_full = ClobService.get_book_by_token_id(
-        "65225399431947441261973886818995257941140037688423054284478538534712119046738", "BUY")
+        "114304586861386186441621124384163963092522056897081085884483958561365015034812", "SELL")
 
-    res = OrderService().simulate_buy_transaction(Decimal('1000'), token_data_full)
+    res = OrderService().simulate_buy_transaction(Decimal('100000'), token_data_full)
     print(res)

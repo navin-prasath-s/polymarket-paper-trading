@@ -35,7 +35,7 @@ class ClobService:
 
         try:
             response = open_client.get_market(condition_id)
-            return response.get("data")
+            return response
         except Exception as e:
             print(f"Error fetching market for condition_id {condition_id}: {e}")
             return None
