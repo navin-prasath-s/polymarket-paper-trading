@@ -145,9 +145,6 @@ async def test_create_market_buy_order_new_share_success():
         assert order_record.amount_usdc == Decimal("200.00")
         assert order_record.shares == Decimal("1750.00")
 
-        expected_price = Decimal("200.00") / Decimal("1750.00")
-        assert abs(order_record.price - expected_price) < Decimal("0.01")
-
         fills = await db.scalars(
             select(OrderFill).where(OrderFill.order_id == order_record.order_id)
         )

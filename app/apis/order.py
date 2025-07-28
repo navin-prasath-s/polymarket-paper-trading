@@ -124,7 +124,6 @@ async def create_buy_order(
             status=OrderStatus.FILLED,
             amount_usdc=total_cost,
             shares=total_shares,
-            price=total_cost/ total_shares
         )
         db.add(new_order)
         await db.flush()
