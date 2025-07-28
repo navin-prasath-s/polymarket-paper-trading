@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import FastAPI
-from app.apis import market, auth, user_profile
+from app.apis import market, auth, user_profile, order
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -18,6 +18,8 @@ app.include_router(market.router)
 
 app.include_router(user_profile.router)
 
+app.include_router(order.router)
 
 
-# uvicorn app.app:app --reload --port 8000
+
+# uvicorn app.app:app --reload --port 8080
