@@ -25,11 +25,6 @@ engine = create_async_engine(url, echo=True)
 async_session_maker = async_sessionmaker(engine, autoflush=False, expire_on_commit=False, class_=AsyncSession)
 
 
-# def get_sync_session():
-#     return Session(engine)
-
-
-
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session

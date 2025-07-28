@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from app.core.session import get_async_session
@@ -28,9 +29,13 @@ async def create_buy_order(
 ) -> dict:
 
     # 1. Check if market and token exists in market_outcome db
-    market_outcome_statement = select(MarketOutcome).where(
-        MarketOutcome.market == order.market,
-        MarketOutcome.token == order.token
+    market_outcome_statement = (
+        select(MarketOutcome)
+        .options(selectinload(MarketOutcome.market_obj))
+        .where(
+            MarketOutcome.market == order.market,
+            MarketOutcome.token == order.token
+        )
     )
     market_outcome_result = await db.execute(market_outcome_statement)
     market_outcome = market_outcome_result.scalar_one_or_none()
@@ -86,54 +91,53 @@ async def create_buy_order(
 
     # 7. Commit to db
     try:
-        async with db.begin():
+        # 7a. Update user_profile balance
+        user_profile.balance -= total_cost
 
-            # 7a. Update user_profile balance
-            user_profile.balance -= total_cost
+        # 7b. Upsert UserPosition table
+        user_position_statement = select(UserPosition).where(
+            UserPosition.user_id == user_profile.user_id,
+            UserPosition.market == order.market,
+            UserPosition.token == order.token
+        )
+        result = await db.execute(user_position_statement)
+        existing_position = result.scalar_one_or_none()
 
-            # 7b. Upsert UserPosition table
-            user_position_statement = select(UserPosition).where(
-                UserPosition.user_id == user_profile.id,
-                UserPosition.market == order.market,
-                UserPosition.token == order.token
-            )
-            result = await db.execute(user_position_statement)
-            existing_position = result.scalar_one_or_none()
-
-            if existing_position:
-                existing_position.shares += total_shares
-            else:
-                new_position = UserPosition(
-                    user_id=user_profile.id,
-                    market=order.market,
-                    token=order.token,
-                    shares=total_shares
-                )
-                db.add(new_position)
-
-            # 7c. Create Order
-            new_order = Order(
-                user_id=user_profile.id,
+        if existing_position:
+            existing_position.shares += total_shares
+        else:
+            new_position = UserPosition(
+                user_id=user_profile.user_id,
                 market=order.market,
                 token=order.token,
-                side=OrderSide.BUY,
-                order_type=OrderType.MARKET,
-                status=OrderStatus.FILLED,
-                amount_usdc=total_cost,
-                shares=total_shares,
-                price=total_cost/ total_shares
+                shares=total_shares
             )
-            db.add(new_order)
-            await db.flush()
+            db.add(new_position)
 
-            # 7d. Create OrderFill
-            for fill in fills:
-                order_fill = OrderFill(
-                    order_id=new_order.order_id,
-                    fill_price=fill['fill_price'],
-                    fill_shares=fill['fill_shares'],
-                )
-                db.add(order_fill)
+        # 7c. Create Order
+        new_order = Order(
+            user_id=user_profile.user_id,
+            market=order.market,
+            token=order.token,
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            status=OrderStatus.FILLED,
+            amount_usdc=total_cost,
+            shares=total_shares,
+            price=total_cost/ total_shares
+        )
+        db.add(new_order)
+        await db.flush()
+
+        # 7d. Create OrderFill
+        for fill in fills:
+            order_fill = OrderFill(
+                order_id=new_order.order_id,
+                fill_price=fill['fill_price'],
+                fill_shares=fill['fill_shares'],
+            )
+            db.add(order_fill)
+        await db.commit()
 
     except Exception as e:
         await db.rollback()
@@ -147,9 +151,9 @@ async def create_buy_order(
         "order_id": new_order.order_id,
         "status": "success",
         "details": {
-            "amount_usdc": float(total_cost),
-            "shares": float(total_shares),
-            "average_price": float(total_cost / total_shares),
+            "amount_usdc": total_cost,
+            "shares": total_shares,
+            "average_price": total_cost / total_shares,
             "fills": len(fills)
         }
     }

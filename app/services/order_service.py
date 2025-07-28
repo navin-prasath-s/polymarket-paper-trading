@@ -1,4 +1,6 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
+from app.services.clob_service import ClobService
+
 
 class OrderService:
 
@@ -22,9 +24,10 @@ class OrderService:
                 total_shares += size
                 total_cost += possible_cost
                 fills.append({
-                    "fill_price": round(float(price), 2),
-                    "fill_shares": round(float(size), 2)
+                    "fill_price": price,
+                    "fill_shares": size
                 })
+
                 amount_left -= possible_cost
             else:
                 # Can only buy part at this price
@@ -33,37 +36,37 @@ class OrderService:
                     total_shares += shares_affordable
                     total_cost += shares_affordable * price
                     fills.append({
-                        "fill_price": round(float(price), 2),
-                        "fill_shares": round(float(shares_affordable), 2)
+                        "fill_price": price,
+                        "fill_shares": shares_affordable
                     })
                 break
 
         if total_cost < Decimal(amount):
             return {
                 "status": "exceeds_liquidity",
-                "max_amount": round(float(total_cost), 2),
-                "max_shares": round(float(total_shares), 2),
+                "max_amount": total_cost.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+                "max_shares": total_shares.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
                 "fills": fills
             }
 
         return {
             "status": "filled",
-            "shares_filled": round(float(total_shares),2),
-            "total_cost": round(float(total_cost), 2),
+            "shares_filled": total_shares.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+            "total_cost": total_cost.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
             "fills": fills
         }
 
 
 
-
-
-
 if __name__ == "__main__":
-    from app.services.clob_service import ClobService
-    from decimal import Decimal
-
     token_data_full = ClobService.get_book_by_token_id(
-        "114304586861386186441621124384163963092522056897081085884483958561365015034812", "SELL")
+        "114304586861386186441621124384163963092522056897081085884483958561365015034812", "BUY")
 
     res = OrderService().simulate_buy_transaction(Decimal('100000'), token_data_full)
-    print(res)
+    print(res["fills"])
+    total = sum(
+        Decimal(str(fill['fill_price'])) * Decimal(str(fill['fill_shares']))
+        for fill in res['fills']
+    )
+    total = total.quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+    print(total)
