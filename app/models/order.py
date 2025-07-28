@@ -78,10 +78,6 @@ class Order(OrderBase, table=True):
                                      decimal_places=2,
                                      nullable=False)] = Decimal('0')
 
-    # price: Annotated[Decimal, Field(ge=0,
-    #                                  max_digits=14,
-    #                                  decimal_places=2,
-    #                                  nullable=False)] = Decimal('0')
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

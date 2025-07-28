@@ -56,13 +56,77 @@ class OrderService:
             "fills": fills
         }
 
+    @staticmethod
+    def simulate_sell_transaction(shares: Decimal,
+                                 book: list[dict]) -> dict:
+        shares_left = Decimal(shares)
+        total_shares = Decimal("0")
+        total_proceeds = Decimal("0")
+        fills = []
+
+        levels = sorted(book, key=lambda x: Decimal(x['price']), reverse=True)
+
+        for level in levels:
+            price = Decimal(level['price'])
+            size = Decimal(level['size'])
+
+            if size <= shares_left:
+                # Can sell all at this price
+                fill_shares = size
+                total_shares += fill_shares
+                total_proceeds += fill_shares * price
+                fills.append({
+                    "fill_price": price,
+                    "fill_shares": fill_shares
+                })
+                shares_left -= fill_shares
+            else:
+                # Can only buy part at this price
+                fill_shares = shares_left
+                if fill_shares > 0:
+                    total_shares += fill_shares
+                    total_proceeds += fill_shares * price
+                    fills.append({
+                        "fill_price": price,
+                        "fill_shares": fill_shares
+                    })
+                shares_left = Decimal("0")
+                break
+
+        if total_shares < Decimal(shares):
+            return {
+                "status": "exceeds_liquidity",
+                "max_shares": total_shares.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+                "max_amount": total_proceeds.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+                "fills": fills
+            }
+
+        return {
+            "status": "filled",
+            "shares_sold": total_shares.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+            "total_proceeds": total_proceeds.quantize(Decimal("0.01"), rounding=ROUND_DOWN),
+            "fills": fills
+        }
+
 
 
 if __name__ == "__main__":
-    token_data_full = ClobService.get_book_by_token_id(
-        "114304586861386186441621124384163963092522056897081085884483958561365015034812", "BUY")
+    # token_data_full = ClobService.get_book_by_token_id(
+    #     "114304586861386186441621124384163963092522056897081085884483958561365015034812", "BUY")
+    # res = OrderService().simulate_buy_transaction(Decimal('100000'), token_data_full)
+    # print(res["fills"])
+    # total = sum(
+    #     Decimal(str(fill['fill_price'])) * Decimal(str(fill['fill_shares']))
+    #     for fill in res['fills']
+    # )
+    # total = total.quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+    # print(total)
 
-    res = OrderService().simulate_buy_transaction(Decimal('100000'), token_data_full)
+
+
+    token_data_full = ClobService.get_book_by_token_id(
+        "114304586861386186441621124384163963092522056897081085884483958561365015034812", "SELL")
+    res = OrderService().simulate_sell_transaction(Decimal('10000'), token_data_full)
     print(res["fills"])
     total = sum(
         Decimal(str(fill['fill_price'])) * Decimal(str(fill['fill_shares']))

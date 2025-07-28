@@ -159,6 +159,131 @@ async def create_buy_order(
 
 
 
+@router.post("/sell",
+                status_code=status.HTTP_201_CREATED,
+                description="Create a new sell order.")
+async def create_sell_order(
+        order: OrderSellCreate,
+        db: AsyncSession = Depends(get_async_session),
+        user: User = Depends(current_active_user),
+) -> dict:
+
+    # 1. Check if market and token exists in market_outcome db
+    market_outcome_statement = (
+        select(MarketOutcome)
+        .options(selectinload(MarketOutcome.market_obj))
+        .where(
+            MarketOutcome.market == order.market,
+            MarketOutcome.token == order.token
+        )
+    )
+    market_outcome_result = await db.execute(market_outcome_statement)
+    market_outcome = market_outcome_result.scalar_one_or_none()
+    if not market_outcome:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Invalid market/token combination. Market '{order.market}' with token '{order.token}' not found."
+        )
+
+    # 2. Check if market is active
+    if not market_outcome.market_obj.is_tradable:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Market '{order.market}' is not tradable at this time."
+        )
+
+
+    # 3. Fetch the user user_position
+    statement = select(UserPosition).where(
+    UserPosition.user_id == user.id,
+                UserPosition.market == order.market,
+                UserPosition.token == order.token
+                )
+    result = await db.execute(statement)
+    user_position = result.scalar_one_or_none()
+    if not user_position or user_position.shares < order.shares:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient shares to sell. You have {user_position.shares if user_position else 0}, requested {order.shares}."
+        )
+
+
+    # 4. Simulate the order
+    bids_book = ClobService.get_book_by_token_id(order.token, side="SELL")
+    result = OrderService.simulate_sell_transaction(
+        shares=order.shares,
+        book=bids_book,
+    )
+
+    # 5. If exceeds liquidity
+    if result.get("status") == "exceeds_liquidity":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Order exceeds liquidity. "
+                   f"Max shares you can sell is {result['max_shares']}, worth {result['max_amount']} USDC."
+        )
+
+    total_proceeds = result.get("total_proceeds")
+    shares_sold = result.get("shares_sold")
+    fills = result.get("fills")
+
+    # 6. Commit to db
+    try:
+        # 6a. Update user_profile balance
+        statement = select(UserProfile).where(UserProfile.user_id == user.id)
+        result = await db.execute(statement)
+        user_profile = result.scalar_one_or_none()
+        if not user_profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User user_profile not found"
+            )
+        user_profile.balance += total_proceeds
+
+        # 6b. Update UserPosition shares
+        user_position.shares -= shares_sold
+
+        # 6c. Create Order
+        new_order = Order(
+            user_id=user_profile.user_id,
+            market=order.market,
+            token=order.token,
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            status=OrderStatus.FILLED,
+            amount_usdc=total_proceeds,
+            shares=shares_sold,
+        )
+        db.add(new_order)
+        await db.flush()
+
+        # 6d. Create OrderFill
+        for fill in fills:
+            order_fill = OrderFill(
+                order_id=new_order.order_id,
+                fill_price=fill['fill_price'],
+                fill_shares=fill['fill_shares'],
+            )
+            db.add(order_fill)
+        await db.commit()
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred while processing the order: {str(e)}"
+        )
+
+    return {
+        "order_id": new_order.order_id,
+        "status": "success",
+        "details": {
+            "amount_usdc": total_proceeds,
+            "shares": shares_sold,
+            "average_price": total_proceeds / shares_sold if shares_sold else None,
+            "fills": len(fills)
+        }
+    }
 
 
 
