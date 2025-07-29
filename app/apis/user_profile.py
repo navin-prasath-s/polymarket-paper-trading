@@ -7,6 +7,7 @@ from app.core.session import get_async_session
 from app.core.user_manager import current_active_user
 from app.models.user import User
 from app.models.user_profile import UserProfile, UserProfileCreate, UserProfileRead
+from app.models.user_position import UserPositionRead
 
 
 router = APIRouter(prefix="/user_profile",
@@ -62,3 +63,28 @@ async def get_user_profile(
 
     except HTTPException:
         raise
+
+
+@router.get("/position",
+            status_code=status.HTTP_200_OK,
+            response_model=UserPositionRead,
+            description="Get the current user's position in the market.")
+async def get_user_position(
+        db: AsyncSession = Depends(get_async_session),
+        user: User = Depends(current_active_user)
+) -> UserPositionRead:
+    try:
+        statement = select(UserProfile).where(UserProfile.user_id == user.id)
+        result = await db.execute(statement)
+        profile = result.scalar_one_or_none()
+
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User position not found"
+            )
+        return profile
+
+    except HTTPException:
+        raise
+

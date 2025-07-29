@@ -33,6 +33,7 @@ class UserPosition(UserPositionBase, table=True):
                                      nullable=False)] = Decimal('0')
 
 
-# class UserPositionCreate(UserPositionBase):
-#     market: str = Field(primary_key=True)
-#     token: str = Field(primary_key=True)
+class UserPositionRead(UserPositionBase):
+    market: str
+    token: str
+    shares: Decimal

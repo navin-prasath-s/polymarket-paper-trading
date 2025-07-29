@@ -1,5 +1,7 @@
 import asyncio
+from typing import Any, Coroutine, Sequence
 
+from sqlalchemy import Row, RowMapping
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -42,7 +44,6 @@ class MarketSyncService:
                 added_ids.append(model_obj.condition_id)
             except IntegrityError:
                 await db.rollback()
-                # Ignore if already exists, or you can log/collect error
             except Exception as e:
                 await db.rollback()
                 print(f"Insert failed for {market['condition_id']}: {e}")
@@ -87,8 +88,21 @@ class MarketSyncService:
         return added_ids
 
 
+    # @staticmethod
+    # async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[str]:
+    #     """Set is_tradable = False in Market table."""
+    #     updated_ids = []
+    #     result = await db.execute(select(Market).where(Market.condition_id.in_(condition_ids)))
+    #     markets = result.scalars().all()
+    #     for market in markets:
+    #         market.is_tradable = False
+    #         db.add(market)
+    #         updated_ids.append(market.condition_id)
+    #     await db.commit()
+    #     return updated_ids
+
     @staticmethod
-    async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[str]:
+    async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[dict]:
         """Set is_tradable = False in Market table."""
         updated_ids = []
         result = await db.execute(select(Market).where(Market.condition_id.in_(condition_ids)))
@@ -98,7 +112,7 @@ class MarketSyncService:
             db.add(market)
             updated_ids.append(market.condition_id)
         await db.commit()
-        return updated_ids
+        return [market.model_dump() for market in markets]
 
 
     @staticmethod
@@ -124,6 +138,37 @@ class MarketSyncService:
                     await db.rollback()
                     print(f"Failed to commit outcomes for market {market_id}: {e}")
         return inserted_keys
+
+    @staticmethod
+    async def mark_market_outcome_winner(db: AsyncSession, resolved_markets: list[dict]) -> list[str]:
+        """Mark outcomes as winners for resolved markets."""
+        updated = []
+        for market in resolved_markets:
+            try:
+                condition_id = market["condition_id"]
+                tokens = market.get("tokens", [])
+                winning_token_ids = [t["token_id"] for t in tokens if t.get("winner")]
+
+                if not winning_token_ids:
+                    raise ValueError(f"No winner found for market {condition_id}")
+
+                result = await db.execute(
+                    select(MarketOutcome).where(
+                        MarketOutcome.market == condition_id,
+                        MarketOutcome.token.in_(winning_token_ids)
+                    )
+                )
+                outcomes = result.scalars().all()
+                for outcome in outcomes:
+                    outcome.is_winner = True
+                await db.commit()
+
+                updated.append(condition_id)
+            except Exception as e:
+                await db.rollback()
+                print(f"Failed to mark winner for market {market.get('condition_id', '<unknown>')}: {e}")
+
+        return updated
 
 
     @staticmethod
@@ -163,11 +208,14 @@ class MarketSyncService:
         # 9. Mark removed as untradable in market DB
         marked_untradable = await MarketSyncService.mark_markets_untradable(db, list(removed))
 
+        # 10. Mark outcomes as winners
+        updated_markets_untradable =  await MarketSyncService.mark_market_outcome_winner(db, marked_untradable)
+
         return {
             "added_tracked": added_tracked,
             "removed_tracked": removed_tracked,
             "added_stable": added_stable,
-            "marked_untradable": marked_untradable,
+            "marked_untradable": updated_markets_untradable,
             "outcomes_inserted": outcomes_inserted
         }
 
@@ -178,6 +226,8 @@ if __name__ == "__main__":
         async with get_async_manager() as db:
             result = await MarketSyncService.sync_markets(db)
             print(result)
+            with open('sync_results.txt', 'w') as f:
+                f.write(str(result))
         await engine.dispose()
     asyncio.run(main())
 

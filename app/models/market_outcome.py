@@ -22,4 +22,7 @@ class MarketOutcome(MarketOutcomeBase, table=True):
     outcome_text: str = Field(default=None,
                               nullable=True)
 
+    is_winner: bool = Field(default=False,
+                            nullable=False)
+
     market_obj: Optional["Market"] = Relationship(back_populates="outcomes")
