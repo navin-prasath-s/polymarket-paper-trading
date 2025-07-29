@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated
 
-from sqlalchemy import CheckConstraint, ForeignKeyConstraint
+from sqlalchemy import ForeignKeyConstraint
 from sqlmodel import SQLModel, Field
 
 
@@ -18,7 +18,7 @@ class PayoutLog(PayoutLogBase, table=True):
         ForeignKeyConstraint(
             ["market", "token"],
             ["market_outcomes.market", "market_outcomes.token"]
-        )
+        ),
     )
 
     user_id: int = Field(foreign_key="user_profiles.user_id", primary_key=True)
@@ -28,4 +28,5 @@ class PayoutLog(PayoutLogBase, table=True):
                                       max_digits=14,
                                       decimal_places=2,
                                       nullable=False)]
+    is_winner: bool = Field(nullable=True, default=False)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

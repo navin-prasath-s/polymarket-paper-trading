@@ -1,5 +1,3 @@
-import asyncio
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,7 +7,7 @@ from app.models.market_change_log import MarketChangeLog, MarketChangeType
 from app.models.market_outcome import MarketOutcome
 from app.models.tracked_market import TrackedMarket
 from app.services.clob_service import ClobService
-from app.core.session import get_async_manager, engine
+
 
 
 class MarketSyncService:
@@ -203,20 +201,9 @@ class MarketSyncService:
             "added_tracked": added_tracked,
             "removed_tracked": removed_tracked,
             "added_stable": added_stable,
-            "marked_untradable": updated_markets_untradable,
-            "outcomes_inserted": outcomes_inserted
+            "outcomes_inserted": outcomes_inserted,
+            "updated_markets_untradable": updated_markets_untradable,
         }
 
-
-
-if __name__ == "__main__":
-    async def main():
-        async with get_async_manager() as db:
-            result = await MarketSyncService.sync_markets(db)
-            print(result)
-            with open('sync_results.txt', 'w') as f:
-                f.write(str(result))
-        await engine.dispose()
-    asyncio.run(main())
 
 # TODO: Make no commits here and make the api route handle the commit/rollback
