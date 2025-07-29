@@ -1,7 +1,5 @@
 import asyncio
-from typing import Any, Coroutine, Sequence
 
-from sqlalchemy import Row, RowMapping
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -88,19 +86,6 @@ class MarketSyncService:
         return added_ids
 
 
-    # @staticmethod
-    # async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[str]:
-    #     """Set is_tradable = False in Market table."""
-    #     updated_ids = []
-    #     result = await db.execute(select(Market).where(Market.condition_id.in_(condition_ids)))
-    #     markets = result.scalars().all()
-    #     for market in markets:
-    #         market.is_tradable = False
-    #         db.add(market)
-    #         updated_ids.append(market.condition_id)
-    #     await db.commit()
-    #     return updated_ids
-
     @staticmethod
     async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[dict]:
         """Set is_tradable = False in Market table."""
@@ -140,7 +125,7 @@ class MarketSyncService:
         return inserted_keys
 
     @staticmethod
-    async def mark_market_outcome_winner(db: AsyncSession, resolved_markets: list[dict]) -> list[str]:
+    async def mark_market_outcome_winner(db: AsyncSession, resolved_markets: list[dict]) -> list[dict]:
         """Mark outcomes as winners for resolved markets."""
         updated = []
         for market in resolved_markets:
@@ -163,7 +148,10 @@ class MarketSyncService:
                     outcome.is_winner = True
                 await db.commit()
 
-                updated.append(condition_id)
+                updated.append({
+                    "condition_id": condition_id,
+                    "winning_token_ids": winning_token_ids,
+                })
             except Exception as e:
                 await db.rollback()
                 print(f"Failed to mark winner for market {market.get('condition_id', '<unknown>')}: {e}")
