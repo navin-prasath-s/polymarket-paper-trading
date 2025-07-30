@@ -1,0 +1,9 @@
+fastapi==0.116.1
+fastapi_users==14.0.1
+fastapi_users_db_sqlalchemy==7.0.0
+httpx==0.28.1
+py_clob_client==0.23.0
+python-dotenv==1.1.1
+Requests==2.32.4
+SQLAlchemy==2.0.42
+sqlmodel==0.0.24
