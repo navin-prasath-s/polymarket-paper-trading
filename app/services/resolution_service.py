@@ -14,6 +14,10 @@ class ResolutionService:
     async def resolve_market_winners(db: AsyncSession, winning_markets: list[dict]) -> list[dict]:
         all_results = []
 
+        print("======================================================================================================="
+              "=======================================================================================================")
+        print(winning_markets)
+
         for winning_market in winning_markets:
             condition_id = winning_market["condition_id"]
             winning_token_ids = set(winning_market["winning_token_ids"])

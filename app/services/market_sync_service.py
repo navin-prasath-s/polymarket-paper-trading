@@ -85,7 +85,7 @@ class MarketSyncService:
 
 
     @staticmethod
-    async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[dict]:
+    async def mark_markets_untradable(db: AsyncSession, condition_ids: list[str]) -> list[str]:
         """Set is_tradable = False in Market table."""
         updated_ids = []
         result = await db.execute(select(Market).where(Market.condition_id.in_(condition_ids)))
@@ -95,7 +95,7 @@ class MarketSyncService:
             db.add(market)
             updated_ids.append(market.condition_id)
         await db.commit()
-        return [market.model_dump() for market in markets]
+        return updated_ids
 
 
     @staticmethod
@@ -123,18 +123,18 @@ class MarketSyncService:
         return inserted_keys
 
     @staticmethod
-    async def mark_market_outcome_winner(db: AsyncSession, resolved_markets: list[dict]) -> list[dict]:
+    async def mark_market_outcome_winner(db: AsyncSession, resolved_markets: list[str]) -> list[dict]:
         """Mark outcomes as winners for resolved markets."""
         updated = []
-        for market in resolved_markets:
+        for condition_id in resolved_markets:
+            market_info = ClobService.get_clob_market_by_condition_id(condition_id)
+            tokens = market_info.get("tokens", [])
+            winning_token_ids = [t["token_id"] for t in tokens if t.get("winner")]
+            if not winning_token_ids:
+                print(f"No winner found for market {condition_id}")
+                continue
+
             try:
-                condition_id = market["condition_id"]
-                tokens = market.get("tokens", [])
-                winning_token_ids = [t["token_id"] for t in tokens if t.get("winner")]
-
-                if not winning_token_ids:
-                    raise ValueError(f"No winner found for market {condition_id}")
-
                 result = await db.execute(
                     select(MarketOutcome).where(
                         MarketOutcome.market == condition_id,
@@ -150,9 +150,10 @@ class MarketSyncService:
                     "condition_id": condition_id,
                     "winning_token_ids": winning_token_ids,
                 })
+
             except Exception as e:
                 await db.rollback()
-                print(f"Failed to mark winner for market {market.get('condition_id', '<unknown>')}: {e}")
+                print(f"Failed to mark winner for market {condition_id}: {e}")
 
         return updated
 
@@ -195,14 +196,15 @@ class MarketSyncService:
         marked_untradable = await MarketSyncService.mark_markets_untradable(db, list(removed))
 
         # 10. Mark outcomes as winners
-        updated_markets_untradable =  await MarketSyncService.mark_market_outcome_winner(db, marked_untradable)
+        winners =  await MarketSyncService.mark_market_outcome_winner(db, marked_untradable)
 
         return {
             "added_tracked": added_tracked,
             "removed_tracked": removed_tracked,
             "added_stable": added_stable,
             "outcomes_inserted": outcomes_inserted,
-            "updated_markets_untradable": updated_markets_untradable,
+            "marked_untradable": marked_untradable,
+            "winners": winners
         }
 
 
