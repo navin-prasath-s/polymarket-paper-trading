@@ -22,12 +22,15 @@ async def sync_market_and_resolve(db: AsyncSession):
 
     return combined_result
 
-
-if __name__ == "__main__":
-    async def main():
+async def run_periodic_sync():
+    while True:
         async with get_async_manager() as db:
             result = await sync_market_and_resolve(db)
-        await engine.dispose()
         with open("sync_and_resolve_dump.txt", "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2, default=str)
-    asyncio.run(main())
+        print("Sync complete, sleeping for 5 minutes")
+        await engine.dispose()
+        await asyncio.sleep(300)
+
+if __name__ == "__main__":
+    asyncio.run(run_periodic_sync())
