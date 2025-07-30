@@ -43,10 +43,6 @@ class Order(OrderBase, table=True):
             name="_order_shares_non_negative"
         ),
         CheckConstraint(
-            "price >= 0",
-            name="_order_price_non_negative"
-        ),
-        CheckConstraint(
             "amount_usdc >= 0",
             name="_amount_usdc_non_negative"
         ),
